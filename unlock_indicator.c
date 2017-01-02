@@ -75,6 +75,8 @@ extern xcb_screen_t *screen;
 /* Cache the screen’s visual, necessary for creating a Cairo context. */
 static xcb_visualtype_t *vistype;
 
+const char* BEBOP_PATH = "/home/atrus/bin/i3lock/imgs/" ;
+
 /* Maintain the current unlock/PAM state to draw the appropriate unlock
  * indicator. */
 unlock_state_t unlock_state;
@@ -93,13 +95,12 @@ static double scaling_factor(void) {
 
 cairo_surface_t * draw_ed(){
   const char* file_names[4] = { "000.png", "001.png", "002.png", "003.png" };
-  const char* path = "./data/" ;
-  char full_name[strlen(path) + 8];
+  char full_path[strlen(BEBOP_PATH) + 8];
   int rand_img = (rand() % 4);
-  strcpy(full_name, path);
-  strcat(full_name, file_names[rand_img]);
+  strcpy(full_path, BEBOP_PATH);
+  strcat(full_path, file_names[rand_img]);
 
-  return cairo_image_surface_create_from_png(full_name);
+  return cairo_image_surface_create_from_png(full_path);
 }
 
 /*
@@ -129,6 +130,15 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
 
     cairo_surface_t *xcb_output = cairo_xcb_surface_create(conn, bg_pixmap, vistype, resolution[0], resolution[1]);
     cairo_t *xcb_ctx = cairo_create(xcb_output);
+
+    // default to red ed-background, if no -i is specified
+    if(!img){
+      const char* ed_path = "ed-wallpaper.png" ;
+      char full_path[strlen(BEBOP_PATH) + strlen(ed_path)];
+      strcpy(full_path, BEBOP_PATH);
+      strcat(full_path, ed_path);
+      img = cairo_image_surface_create_from_png(full_path);
+    }
 
     if (img) {
         if (!tile) {
