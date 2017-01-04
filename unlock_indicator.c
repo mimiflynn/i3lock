@@ -51,6 +51,13 @@ extern char *modifier_string;
 /* A Cairo surface containing the specified image (-i), if any. */
 extern cairo_surface_t *img;
 
+/* A folder containing the animations to use(-a), if any. */
+extern char *animation_path;
+
+/*The filename max size is 255 for ext4, and the most animations we'll allow is, arbitrarily, 256.*/
+extern char animation_file_names[256][256];
+extern int animation_file_count;
+
 /* Whether the image should be tiled. */
 extern bool tile;
 /* The background color to use (in hex). */
@@ -75,8 +82,6 @@ extern xcb_screen_t *screen;
 /* Cache the screen’s visual, necessary for creating a Cairo context. */
 static xcb_visualtype_t *vistype;
 
-const char* BEBOP_PATH = "./imgs/" ;
-
 /* Maintain the current unlock/PAM state to draw the appropriate unlock
  * indicator. */
 unlock_state_t unlock_state;
@@ -93,12 +98,14 @@ static double scaling_factor(void) {
     return (dpi / 96.0);
 }
 
-cairo_surface_t * draw_ed(){
-  const char* file_names[4] = { "000.png", "001.png", "002.png", "003.png" };
-  char full_path[strlen(BEBOP_PATH) + 8];
-  int rand_img = (rand() % 4);
-  strcpy(full_path, BEBOP_PATH);
-  strcat(full_path, file_names[rand_img]);
+cairo_surface_t * get_animation_frame(){
+  int rand_img = (rand() % animation_file_count);
+  const char* file_name = animation_file_names[rand_img];
+
+  //add animation path to filename
+  char full_path[strlen(animation_path) + strlen(file_name)];
+  strcpy(full_path, animation_path);
+  strcat(full_path, file_name);
 
   return cairo_image_surface_create_from_png(full_path);
 }
@@ -122,8 +129,9 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
      * depending on the amount of screens) unlock indicators on. */
     cairo_surface_t *output = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, button_diameter_physical, button_diameter_physical);
     cairo_surface_t *image_output = 0;
-    if(unlock_indicator && (unlock_state >= STATE_KEY_PRESSED || pam_state > STATE_PAM_IDLE)){
-      image_output = draw_ed();
+    if(animation_file_count > 0 && unlock_indicator &&
+       (unlock_state >= STATE_KEY_PRESSED || pam_state > STATE_PAM_IDLE)){
+      image_output = get_animation_frame();
     }
 
     cairo_t *ctx = cairo_create(output);
@@ -131,14 +139,6 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
     cairo_surface_t *xcb_output = cairo_xcb_surface_create(conn, bg_pixmap, vistype, resolution[0], resolution[1]);
     cairo_t *xcb_ctx = cairo_create(xcb_output);
 
-    // default to red ed-background, if no -i is specified
-    if(!img){
-      const char* ed_path = "ed-wallpaper.png" ;
-      char full_path[strlen(BEBOP_PATH) + strlen(ed_path)];
-      strcpy(full_path, BEBOP_PATH);
-      strcat(full_path, ed_path);
-      img = cairo_image_surface_create_from_png(full_path);
-    }
 
     if (img) {
         if (!tile) {
@@ -333,8 +333,8 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
             int x = (xr_resolutions[screen].x + ((xr_resolutions[screen].width / 2) - (button_diameter_physical / 2)));
             int y = (xr_resolutions[screen].y + ((xr_resolutions[screen].height / 2) - (button_diameter_physical / 2)));
             if(image_output){ // don't draw ed if backing
-              const int image_x = 390; //hard coded from image dimensions
-              const int image_y = 390;
+              const int image_x = cairo_image_surface_get_width(image_output);
+              const int image_y = cairo_image_surface_get_height(image_output);
               double scale_x = ((float)button_diameter_physical / (float)image_x);
               double scale_y = ((float)button_diameter_physical / (float)image_y);
 
@@ -342,7 +342,7 @@ xcb_pixmap_t draw_image(uint32_t *resolution) {
                            scale_x,
                            scale_y);
 
-              cairo_set_source_surface(xcb_ctx, image_output, (x* 1/scale_x) - 35, y * 1/scale_y - 7);
+              cairo_set_source_surface(xcb_ctx, image_output, (x* 1/scale_x), y * 1/scale_y);
               cairo_paint(xcb_ctx);
             }
             else{
