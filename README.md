@@ -1,6 +1,8 @@
-Cowboy Bebop Locker
+Animated Screen Locker
 ===============================
 ![examples of it working](http://thumbs.gfycat.com/QuaintAnchoredBoaconstrictor-size_restricted.gif)
+
+I3Locker, with your keypresses animating the screen!
 
 Adds a -a format which specifies where to pull animation files from. Animation files must be in .png format. 
 
