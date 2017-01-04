@@ -75,7 +75,7 @@ extern xcb_screen_t *screen;
 /* Cache the screen’s visual, necessary for creating a Cairo context. */
 static xcb_visualtype_t *vistype;
 
-const char* BEBOP_PATH = "/home/atrus/bin/i3lock/imgs/" ;
+const char* BEBOP_PATH = "./imgs/" ;
 
 /* Maintain the current unlock/PAM state to draw the appropriate unlock
  * indicator. */
