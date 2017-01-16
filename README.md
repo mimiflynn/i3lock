@@ -9,3 +9,21 @@ Adds a -a format which specifies where to pull animation files from. Animation f
 Example Usage, to see the gif: ./i3lock -i ./imgs/wallpaper/ed-wallpaper.png -a imgs/
 
 A fork from https://github.com/i3/i3lock . See the README there as well.
+
+## Ubuntu build notes
+
+```
+libxkbcommon-x11-dev
+libxkbcommon-dev
+libexcb-xinerama0-dev
+libxcb-util-dev
+libxcb-xkb-dev
+libpam0g-dev
+libcairo2-dev
+libev-dev
+libx11-xcb-dev
+libx11-dev
+libxinerama-dev
+libxcb-dpms0-dev
+libxcb-image0-dev
+```
